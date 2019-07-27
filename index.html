@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
-    <link rel="stylesheet" href="css.css">
+    <!-- <link rel="stylesheet" href="css.css"> -->
 </head>
 
 <body>
@@ -19,7 +19,33 @@
         <button onclick="stop()">stop</button>
     </div>
 </body>
-<script src="./util.js"></script>
-<script src="main.js"></script>
+<!-- <script src="./util.js"></script> -->
+<!-- <script src="main.js"></script> -->
+
+<style>
+    .board {
+        /* background: green; */
+        border: 1px solid grey;
+    }
+
+    .controls {
+        top: 0;
+        position: fixed;
+        z-index: 501;
+        left: 58%;
+        width: 100%;
+    }
+
+    button {
+        background: #537e2e;
+        border: 0px;
+        color: white;
+        text-transform: capitalize;
+    }
+
+    h3 {
+        color: white;
+    }
+</style>
 
 </html>
