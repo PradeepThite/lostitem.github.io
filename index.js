@@ -68,4 +68,6 @@ class G_Drive extends GDAuth {
 
 }
 let drive = new G_Drive();
-drive.getListFiles('./song.mp3');
+drive.getListFiles();
+drive.uploadFilesAuth('./song.mp3');
+drive.downloadFilesAuth("<File id of google drive file>")
