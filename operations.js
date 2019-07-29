@@ -59,7 +59,7 @@ class Operations {
         const fileSize = fs.statSync(fileName).size;
         const res = await drive.files.create({
             requestBody: {
-                name: "test"
+                name: fileName.split("//")[fileName.split("//").length-1].split('.')[0]
                 // a requestBody element is required if you want to use multipart
             },
             media: {
@@ -72,10 +72,10 @@ class Operations {
                 const progress = (evt.bytesRead / fileSize) * 100;
                 readline.clearLine();
                 readline.cursorTo(0);
-                process.stdout.write(`${Math.round(progress)}% complete`);
+                process.stdout.write(`${Math.round(progress)}% -- `);
             },
         });
-        console.log(res.data);
+        // console.log(res.data);
         return res.data;
     }
 

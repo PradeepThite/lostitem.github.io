@@ -1,73 +1,84 @@
-const {
-    google
-} = require('googleapis');
-let GDAuth = require("./auth");
+const _ = require('lodash');
+const exec = require('child_process').exec;
+const fs = require('fs-extra');
+let cron = require('node-cron');
+let Drive = require('./drive');
+const zipFolder = require('zip-a-folder');
+let dbOptions = require('./config.json');
 
-class G_Drive extends GDAuth {
-    constructor() {
-        super();
-    }
-
-    getListFiles() {
-        this.getAuth().then((auth) => {
-            this.listFiles(auth);
-        }, (err) => {
-            console.log(err)
-        })
-    }
-
-    /**
-     * Lists the names and IDs of up to 10 files.
-     * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
-     */
-    listFiles(auth) {
-        const drive = google.drive({
-            version: 'v3',
-            auth
-        });
-        drive.files.list({
-            pageSize: 5,
-            fields: 'nextPageToken, files(id, name)',
-        }, (err, res) => {
-            if (err) return console.log('The API returned an error: ' + err);
-            const files = res.data.files;
-            if (files.length) {
-                console.log('Files:');
-                files.map((file) => {
-                    console.log(`Name: ${file.name} id: (${file.id})`);
-                });
-            } else {
-                console.log('No files found.');
-            }
-        });
-    }
-
-    downloadFilesAuth(fileID) {
-        this.getAuth().then((auth) => {
-            this.downloadFiles(auth, fileID).then((success) => {
-                console.log(success)
-            }, (err) => {
-                console.log(err)
-            })
-        }, (err) => {
-            console.log(err)
-        })
-    }
-
-    uploadFilesAuth(fileName) {
-        this.getAuth().then((auth) => {
-            this.uploadFiles(auth, fileName).then((success) => {
-                console.log(success)
-            }, (err) => {
-                console.log(err)
-            })
-        }, (err) => {
-            console.log(err)
-        })
-    }
-
+/* return date object */
+var stringToDate = function (dateString) {
+    return new Date(dateString);
 }
-let drive = new G_Drive();
-drive.getListFiles();
-drive.uploadFilesAuth('./song.mp3');
-drive.downloadFilesAuth("<File id of google drive file>")
+
+var dbAutoBackUp = function () {
+    // check for auto backup is enabled or disabled
+    try {
+
+        if (dbOptions.autoBackup == true) {
+            console.log(' ==> Backup startrd..')
+            var date = new Date(); // current Date
+            var beforeDate, oldBackupDir, oldBackupPath;
+            currentDate = stringToDate(date); // Current date
+            var newBackupDir = currentDate.getFullYear() + '-' + (currentDate.getMonth() + 1) + '-' + currentDate.getDate();
+            // console.log("New Backup Directory : " + newBackupDir);
+            var newBackupPath = dbOptions.autoBackupPath + 'mongodump-' + newBackupDir; // New backup path for current backup process
+            // check for remove old backup after keeping # of days given in configuration
+            if (dbOptions.removeOldBackup == true) {
+                beforeDate = _.clone(currentDate);
+                beforeDate.setDate(beforeDate.getDate() - dbOptions.keepLastDaysBackup); // Substract number of days to keep backup and remove old backup
+                oldBackupDir = beforeDate.getFullYear() + '-' + (beforeDate.getMonth() + 1) + '-' + beforeDate.getDate();
+                oldBackupPath = dbOptions.autoBackupPath + 'mongodump-' + oldBackupDir; // old backup(after keeping # of days)
+                // console.log('Old BKP name : ' + oldBackupPath);
+            }
+            var cmd = 'mongodump --host ' + dbOptions.host + ' --port ' + dbOptions.port + ' --db ' + dbOptions.database + ' --out ' + newBackupPath; // Command for mongodb dump process
+
+            exec(cmd, function (error, stdout, stderr) {
+                if (error) {
+                    // check for remove old backup after keeping # of days given in configuration
+                    if (dbOptions.removeOldBackup == true) {
+                        if (fs.existsSync(oldBackupPath)) {
+                            exec("rm -rf " + oldBackupPath, function (err) {});
+                        }
+                    }
+                    console.log(error)
+                } else {
+                    console.log(" ==> Data Backed Up ...")
+                    removeOldBackup(oldBackupPath);
+                    zip(newBackupPath);
+                }
+            });
+        }
+    } catch (exception) {
+        console.log(exception)
+    }
+}
+
+function removeOldBackup(oldFolderPath) {
+    if (dbOptions.removeOldBackup) {
+        fs.remove(oldFolderPath, err => {
+            if (err) return console.error(err)
+            console.log(' ==> success!')
+        })
+    }
+}
+
+function startCron() {
+    console.log('Started Cron of Backup is : ' + dbOptions.corn.key + '  Info : ' + dbOptions.corn.descriptoins);
+    cron.schedule(dbOptions.corn.key, () => {
+        console.log('Last calculation of breaktime started at : ' + new Date());
+    });
+}
+
+function zip(path) {
+    zipFolder.zipFolder(path, path + ".zip", function (err, data) {
+        if (err) {
+            console.log('Something went wrong!', err);
+        } else {
+            console.log(" ==> File zipped : " + path + ".zip");
+            Drive.uploadFilesAuth(path + ".zip");
+        }
+    });
+}
+// dbAutoBackUp();
+startCron();

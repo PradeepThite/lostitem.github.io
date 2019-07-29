@@ -1,0 +1,15 @@
+{
+    "user": "Lentor",
+    "pass": "Lentor@123",
+    "host": "localhost",
+    "port": 27777,
+    "database": "lentor",
+    "autoBackup": true,
+    "removeOldBackup": true,
+    "keepLastDaysBackup": 2,
+    "autoBackupPath": "D://Pradeep//Research//google_drive_CRUD//BKP//",
+    "corn": {
+        "key": "0 0 * * *",
+        "descriptoins": "Runs at the end of day"
+    }
+}

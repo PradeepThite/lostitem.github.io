@@ -4,8 +4,12 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "child_process": "^1.0.2",
+    "fs-extra": "^8.1.0",
     "googleapis": "^39.2.0",
-    "lodash": "^4.17.15"
+    "lodash": "^4.17.15",
+    "node-cron": "^2.0.3",
+    "zip-a-folder": "0.0.8"
   },
   "devDependencies": {},
   "scripts": {
